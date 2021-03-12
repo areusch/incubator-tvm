@@ -18,7 +18,7 @@
  */
 
 /*!
- * \file tvm/runtime/graph_runtime_factory.h
+ * \file tvm/runtime/graph_executor_factory.h
  * \brief Graph runtime factory creating graph runtime.
  */
 
@@ -37,7 +37,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "./graph_runtime.h"
+#include "./graph_executor.h"
 
 namespace tvm {
 namespace runtime {
@@ -91,10 +91,10 @@ class TVM_DLL GraphExecutorFactory : public runtime::ModuleNode {
 
   /*!
    * \brief Set params.
-   * \param graph_runtime The graph runtime we want to set the params into.
+   * \param graph_executor The graph runtime we want to set the params into.
    * \param params The graph params value we want to set.
    */
-  void SetParams(GraphExecutor* graph_runtime,
+  void SetParams(GraphExecutor* graph_executor,
                  const std::unordered_map<std::string, tvm::runtime::NDArray>& params) const {
     std::unordered_map<std::string, tvm::runtime::NDArray> value = params;
     // upload big arrays first to avoid memory issue in rpc mode
@@ -109,9 +109,9 @@ class TVM_DLL GraphExecutorFactory : public runtime::ModuleNode {
                 return lhs_size > rhs_size;
               });
     for (const auto& key : keys) {
-      int in_idx = graph_runtime->GetInputIndex(key);
+      int in_idx = graph_executor->GetInputIndex(key);
       if (in_idx >= 0) {
-        graph_runtime->SetInput(in_idx, const_cast<DLTensor*>(value[key].operator->()));
+        graph_executor->SetInput(in_idx, const_cast<DLTensor*>(value[key].operator->()));
       }
     }
   }

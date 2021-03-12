@@ -22,7 +22,7 @@ import torchvision
 import tvm.topi.testing
 import tvm
 from tvm import relay
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 import scipy
 import tvm.testing
 
@@ -76,7 +76,7 @@ def get_tvm_output(
         graph, lib, params = relay.build(mod, target, params=params)
 
     ctx = tvm.cpu(0)
-    m = graph_runtime.create(graph, lib, ctx)
+    m = graph_executor.create(graph, lib, ctx)
     # set inputs
     if isinstance(input_data, list):
         for i, e in enumerate(input_names):

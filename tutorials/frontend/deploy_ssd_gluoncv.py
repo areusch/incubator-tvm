@@ -28,7 +28,7 @@ from tvm import te
 
 from matplotlib import pyplot as plt
 from tvm import relay
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 from tvm.contrib.download import download_testdata
 from gluoncv import model_zoo, data, utils
 
@@ -102,7 +102,7 @@ def build(target):
 
 def run(lib, ctx):
     # Build TVM runtime
-    m = graph_runtime.GraphModule(lib["default"](ctx))
+    m = graph_executor.GraphModule(lib["default"](ctx))
     tvm_input = tvm.nd.array(x.asnumpy(), ctx=ctx)
     m.set_input("data", tvm_input)
     # execute

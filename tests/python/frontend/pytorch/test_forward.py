@@ -27,7 +27,7 @@ from torch.nn import Module
 from torch.nn import functional as F
 import tvm
 from tvm import relay
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 from tvm.contrib.nvcc import have_fp16
 import tvm.testing
 from packaging import version as package_version
@@ -208,7 +208,7 @@ def verify_model(model_name, input_data=[], custom_convert_map={}, rtol=1e-5, at
     with tvm.transform.PassContext(opt_level=3):
         for target, ctx in tvm.testing.enabled_targets():
             relay_graph, relay_lib, relay_params = relay.build(mod, target=target, params=params)
-            relay_model = graph_runtime.create(relay_graph, relay_lib, ctx)
+            relay_model = graph_executor.create(relay_graph, relay_lib, ctx)
             relay_model.set_input(**relay_params)
             for name, inp in compiled_input.items():
                 relay_model.set_input(name, inp)
@@ -3560,7 +3560,7 @@ def test_forward_pretrained_bert_base_uncased():
     # --------------
 
     ctx = tvm.context(target, 0)
-    relay_model = graph_runtime.create(relay_graph, relay_lib, ctx)
+    relay_model = graph_executor.create(relay_graph, relay_lib, ctx)
     relay_model.set_input(**relay_params)
     relay_model.set_input(input_1, tokens_tensor)
     relay_model.set_input(input_2, segments_tensors)

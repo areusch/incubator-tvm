@@ -18,7 +18,7 @@ import numpy as np
 from tvm import relay, runtime
 from tvm.relay import testing
 import tvm
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 from tvm.contrib.debugger import debug_runtime
 import tvm.testing
 
@@ -36,7 +36,7 @@ def verify(data):
         graph, lib, graph_params = relay.build_module.build(mod, "llvm", params=params)
 
     ctx = tvm.cpu()
-    module = graph_runtime.create(graph, lib, ctx)
+    module = graph_executor.create(graph, lib, ctx)
     module.set_input("data", data)
     module.set_input(**graph_params)
     module.run()
@@ -54,7 +54,7 @@ def test_legacy_compatibility():
         graph, lib, graph_params = relay.build_module.build(mod, "llvm", params=params)
     data = np.random.uniform(-1, 1, size=input_shape(mod)).astype("float32")
     ctx = tvm.cpu()
-    module = graph_runtime.create(graph, lib, ctx)
+    module = graph_executor.create(graph, lib, ctx)
     module.set_input("data", data)
     module.set_input(**graph_params)
     module.run()
@@ -82,7 +82,7 @@ def test_cpu():
     tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
     # graph runtime wrapper
-    gmod = graph_runtime.GraphModule(complied_graph_lib["default"](ctx))
+    gmod = graph_executor.GraphModule(complied_graph_lib["default"](ctx))
     gmod.set_input("data", data)
     gmod.run()
     out = gmod.get_output(0).asnumpy()
@@ -109,7 +109,7 @@ def test_gpu():
     tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
     # graph runtime wrapper
-    gmod = graph_runtime.GraphModule(complied_graph_lib["default"](ctx))
+    gmod = graph_executor.GraphModule(complied_graph_lib["default"](ctx))
     gmod.set_input("data", data)
     gmod.run()
     out = gmod.get_output(0).asnumpy()
@@ -151,7 +151,7 @@ def test_mod_export():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         gmod.set_input("data", data)
         gmod.run()
         out = gmod.get_output(0).asnumpy()
@@ -190,7 +190,7 @@ def test_mod_export():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         gmod.set_input("data", data)
         gmod.run()
         out = gmod.get_output(0).asnumpy()
@@ -234,7 +234,7 @@ def test_mod_export():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         gmod.set_input("data", data)
         gmod.run()
         out = gmod.get_output(0).asnumpy()
@@ -279,7 +279,7 @@ def test_mod_export():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         gmod.set_input("data", data)
         gmod.run()
         out = gmod.get_output(0).asnumpy()
@@ -333,7 +333,7 @@ def test_remove_package_params():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         loaded_params = bytearray(open(temp.relpath("deploy_param.params"), "rb").read())
         gmod.set_input("data", data)
         gmod.load_params(loaded_params)
@@ -380,7 +380,7 @@ def test_remove_package_params():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         loaded_params = bytearray(open(temp.relpath("deploy_param.params"), "rb").read())
         gmod.set_input("data", data)
         gmod.load_params(loaded_params)
@@ -433,7 +433,7 @@ def test_remove_package_params():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         loaded_params = bytearray(open(path_params, "rb").read())
         gmod.set_input("data", data)
         gmod.load_params(loaded_params)
@@ -486,7 +486,7 @@ def test_remove_package_params():
         tvm.testing.assert_allclose(out, verify(data), atol=1e-5)
 
         # graph runtime wrapper
-        gmod = graph_runtime.GraphModule(loaded_lib["default"](ctx))
+        gmod = graph_executor.GraphModule(loaded_lib["default"](ctx))
         loaded_params = bytearray(open(path_params, "rb").read())
         gmod.set_input("data", data)
         gmod.load_params(loaded_params)
@@ -501,7 +501,7 @@ def test_remove_package_params():
         verify_rpc_gpu_remove_package_params(obj_format)
 
 
-def test_debug_graph_runtime():
+def test_debug_graph_executor():
     if not tvm.testing.device_enabled("llvm"):
         print("Skip because llvm is not enabled")
         return
@@ -515,7 +515,7 @@ def test_debug_graph_runtime():
     try:
         gmod = complied_graph_lib["debug_create"]("default", ctx)
     except:
-        print("Skip because debug graph_runtime not enabled")
+        print("Skip because debug graph_executor not enabled")
         return
     set_input = gmod["set_input"]
     run = gmod["run"]
@@ -572,5 +572,5 @@ if __name__ == "__main__":
     test_gpu()
     test_mod_export()
     test_remove_package_params()
-    test_debug_graph_runtime()
+    test_debug_graph_executor()
     test_multiple_imported_modules()

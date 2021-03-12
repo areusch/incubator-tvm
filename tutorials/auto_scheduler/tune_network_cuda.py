@@ -49,7 +49,7 @@ import numpy as np
 import tvm
 from tvm import relay, auto_scheduler
 import tvm.relay.testing
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 
 #################################################################
 # Define a Network
@@ -282,7 +282,7 @@ with auto_scheduler.ApplyHistoryBest(log_file):
 
 # Create graph runtime
 ctx = tvm.context(str(target), 0)
-module = graph_runtime.GraphModule(lib["default"](ctx))
+module = graph_executor.GraphModule(lib["default"](ctx))
 data_tvm = tvm.nd.array((np.random.uniform(size=input_shape)).astype(dtype))
 module.set_input("data", data_tvm)
 

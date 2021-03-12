@@ -124,7 +124,7 @@ TEST(Relay, BuildModule) {
   tvm::runtime::Module mod = mod_f();
   // run
   auto ctx = A->ctx;
-  auto pfr = tvm::runtime::Registry::Get("tvm.graph_runtime.create");
+  auto pfr = tvm::runtime::Registry::Get("tvm.graph_executor.create");
   ICHECK(mod.defined()) << "Module must be defined";
   tvm::runtime::Module run_mod = (*pfr)(json, mod, (int)ctx.device_type, (int)ctx.device_id);
   auto set_input_f = run_mod.GetFunction("set_input_zero_copy", false);

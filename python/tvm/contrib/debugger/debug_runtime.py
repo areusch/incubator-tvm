@@ -22,7 +22,7 @@ import shutil
 import tvm._ffi
 
 from tvm._ffi.base import string_types
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 from tvm.runtime.ndarray import array
 from . import debug_result
 
@@ -57,11 +57,11 @@ def create(graph_json_str, libmod, ctx, dump_root=None):
     assert isinstance(graph_json_str, string_types)
 
     try:
-        ctx, num_rpc_ctx, device_type_id = graph_runtime.get_device_ctx(libmod, ctx)
+        ctx, num_rpc_ctx, device_type_id = graph_executor.get_device_ctx(libmod, ctx)
         if num_rpc_ctx == len(ctx):
-            fcreate = ctx[0]._rpc_sess.get_function("tvm.graph_runtime_debug.create")
+            fcreate = ctx[0]._rpc_sess.get_function("tvm.graph_executor_debug.create")
         else:
-            fcreate = tvm._ffi.get_global_func("tvm.graph_runtime_debug.create")
+            fcreate = tvm._ffi.get_global_func("tvm.graph_executor_debug.create")
     except ValueError:
         raise ValueError(
             "Please set '(USE_GRAPH_RUNTIME_DEBUG ON)' in "
@@ -71,7 +71,7 @@ def create(graph_json_str, libmod, ctx, dump_root=None):
     return GraphModuleDebug(func_obj, ctx, graph_json_str, dump_root)
 
 
-class GraphModuleDebug(graph_runtime.GraphModule):
+class GraphModuleDebug(graph_executor.GraphModule):
     """Graph debug runtime module.
 
     This is a debug wrapper over the TVM runtime.
@@ -100,7 +100,7 @@ class GraphModuleDebug(graph_runtime.GraphModule):
         self._dump_path = None
         self._get_output_by_layer = module["get_output_by_layer"]
         self._run_individual = module["run_individual"]
-        graph_runtime.GraphModule.__init__(self, module)
+        graph_executor.GraphModule.__init__(self, module)
         self._create_debug_env(graph_json_str, ctx)
 
     def _format_context(self, ctx):

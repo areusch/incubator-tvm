@@ -58,11 +58,11 @@ def check_result(mod, map_inputs, out_shape, result, tol=1e-5, target="llvm", ct
         out = vm.run(**map_inputs)
         tvm.testing.assert_allclose(out.asnumpy(), result, rtol=tol, atol=tol)
 
-    def check_graph_runtime_result():
+    def check_graph_executor_result():
         with tvm.transform.PassContext(opt_level=3, disabled_pass=["AlterOpLayout"]):
             json, lib, _ = relay.build(mod, target=target)
         lib = update_lib(lib)
-        rt_mod = tvm.contrib.graph_runtime.create(json, lib, ctx)
+        rt_mod = tvm.contrib.graph_executor.create(json, lib, ctx)
 
         for name, data in map_inputs.items():
             rt_mod.set_input(name, data)
@@ -73,7 +73,7 @@ def check_result(mod, map_inputs, out_shape, result, tol=1e-5, target="llvm", ct
         tvm.testing.assert_allclose(out.asnumpy(), result, rtol=tol, atol=tol)
 
     check_vm_result()
-    check_graph_runtime_result()
+    check_graph_executor_result()
 
 
 def set_external_func_attr(func, compiler, ext_symbol):

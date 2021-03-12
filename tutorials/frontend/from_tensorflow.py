@@ -152,10 +152,10 @@ with tvm.transform.PassContext(opt_level=3):
 # ---------------------------------
 # Now we can try deploying the compiled model on target.
 
-from tvm.contrib import graph_runtime
+from tvm.contrib import graph_executor
 
 dtype = "uint8"
-m = graph_runtime.GraphModule(lib["default"](ctx))
+m = graph_executor.GraphModule(lib["default"](ctx))
 # set inputs
 m.set_input("DecodeJpeg/contents", tvm.nd.array(x.astype(dtype)))
 # execute
