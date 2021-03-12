@@ -231,101 +231,108 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Integer doInBackground(Bitmap... bitmaps) {
-            if (null != graphExecutorModule) {
-                int count  = bitmaps.length;
-                for (int i = 0 ; i < count ; i++) {
-                    long processingTimeMs = SystemClock.uptimeMillis();
-                    Log.i(TAG, "Decode JPEG image content");
+          if (null != graphExecutorModule) {
+            int count = bitmaps.length;
+            for (int i = 0; i < count; i++) {
+              long processingTimeMs = SystemClock.uptimeMillis();
+              Log.i(TAG, "Decode JPEG image content");
 
-                    // extract the jpeg content
-                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    bitmaps[i].compress(Bitmap.CompressFormat.JPEG,100,stream);
-                    byte[] byteArray = stream.toByteArray();
-                    Bitmap imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+              // extract the jpeg content
+              ByteArrayOutputStream stream = new ByteArrayOutputStream();
+              bitmaps[i].compress(Bitmap.CompressFormat.JPEG, 100, stream);
+              byte[] byteArray = stream.toByteArray();
+              Bitmap imageBitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
 
-                    // crop input image at centre to model input size
-                    // commecial deploy note:: instead of cropying image do resize
-                    // image to model input size so we never lost the image content
-                    Bitmap cropImageBitmap = Bitmap.createBitmap(MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, Bitmap.Config.ARGB_8888);
-                    Matrix frameToCropTransform = getTransformationMatrix(imageBitmap.getWidth(), imageBitmap.getHeight(),
-                            MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, 0, true);
-                    Canvas canvas = new Canvas(cropImageBitmap);
-                    canvas.drawBitmap(imageBitmap, frameToCropTransform, null);
+              // crop input image at centre to model input size
+              // commecial deploy note:: instead of cropying image do resize
+              // image to model input size so we never lost the image content
+              Bitmap cropImageBitmap =
+                  Bitmap.createBitmap(MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, Bitmap.Config.ARGB_8888);
+              Matrix frameToCropTransform = getTransformationMatrix(imageBitmap.getWidth(),
+                  imageBitmap.getHeight(), MODEL_INPUT_SIZE, MODEL_INPUT_SIZE, 0, true);
+              Canvas canvas = new Canvas(cropImageBitmap);
+              canvas.drawBitmap(imageBitmap, frameToCropTransform, null);
 
-                    // image pixel int values
-                    int[] pixelValues = new int[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE];
-                    // image RGB float values
-                    float[] imgRgbValues = new float[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * IMG_CHANNEL];
-                    // image RGB transpose float values
-                    float[] imgRgbTranValues = new float[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * IMG_CHANNEL];
+              // image pixel int values
+              int[] pixelValues = new int[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE];
+              // image RGB float values
+              float[] imgRgbValues = new float[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * IMG_CHANNEL];
+              // image RGB transpose float values
+              float[] imgRgbTranValues =
+                  new float[MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * IMG_CHANNEL];
 
-                    // pre-process the image data from 0-255 int to normalized float based on the
-                    // provided parameters.
-                    cropImageBitmap.getPixels(pixelValues, 0, MODEL_INPUT_SIZE, 0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
-                    for (int j = 0; j < pixelValues.length; ++j) {
-                        imgRgbValues[j * 3 + 0] = ((pixelValues[j] >> 16) & 0xFF)/255.0f;
-                        imgRgbValues[j * 3 + 1] = ((pixelValues[j] >> 8) & 0xFF)/255.0f;
-                        imgRgbValues[j * 3 + 2] = (pixelValues[j] & 0xFF)/255.0f;
-                    }
+              // pre-process the image data from 0-255 int to normalized float based on the
+              // provided parameters.
+              cropImageBitmap.getPixels(
+                  pixelValues, 0, MODEL_INPUT_SIZE, 0, 0, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE);
+              for (int j = 0; j < pixelValues.length; ++j) {
+                imgRgbValues[j * 3 + 0] = ((pixelValues[j] >> 16) & 0xFF) / 255.0f;
+                imgRgbValues[j * 3 + 1] = ((pixelValues[j] >> 8) & 0xFF) / 255.0f;
+                imgRgbValues[j * 3 + 2] = (pixelValues[j] & 0xFF) / 255.0f;
+              }
 
-                    // pre-process the image rgb data transpose based on the provided parameters.
-                    for (int k = 0; k < IMG_CHANNEL; ++k) {
-                        for (int l = 0; l < MODEL_INPUT_SIZE; ++l) {
-                            for (int m = 0; m < MODEL_INPUT_SIZE; ++m) {
-                                int dst_index = m + MODEL_INPUT_SIZE*l + MODEL_INPUT_SIZE*MODEL_INPUT_SIZE*k;
-                                int src_index = k + IMG_CHANNEL*m + IMG_CHANNEL*MODEL_INPUT_SIZE*l;
-                                imgRgbTranValues[dst_index] = imgRgbValues[src_index];
-                            }
-                        }
-                    }
-
-                    // get the function from the module(set input data)
-                    Log.i(TAG, "set input data");
-                    NDArray inputNdArray = NDArray.empty(new long[]{1, IMG_CHANNEL, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE}, new TVMType("float32"));;
-                    inputNdArray.copyFrom(imgRgbTranValues);
-                    Function setInputFunc = graphExecutorModule.getFunction("set_input");
-                    setInputFunc.pushArg(INPUT_NAME).pushArg(inputNdArray).invoke();
-                    // release tvm local variables
-                    inputNdArray.release();
-                    setInputFunc.release();
-
-                    // get the function from the module(run it)
-                    Log.i(TAG, "run function on target");
-                    Function runFunc = graphExecutorModule.getFunction("run");
-                    runFunc.invoke();
-                    // release tvm local variables
-                    runFunc.release();
-
-                    // get the function from the module(get output data)
-                    Log.i(TAG, "get output data");
-                    NDArray outputNdArray = NDArray.empty(new long[]{1, 1000}, new TVMType("float32"));
-                    Function getOutputFunc = graphExecutorModule.getFunction("get_output");
-                    getOutputFunc.pushArg(OUTPUT_INDEX).pushArg(outputNdArray).invoke();
-                    float[] output = outputNdArray.asFloatArray();
-                    // release tvm local variables
-                    outputNdArray.release();
-                    getOutputFunc.release();
-
-                    // display the result from extracted output data
-                    if (null != output) {
-                        int maxPosition = -1;
-                        float maxValue = 0;
-                        for (int j = 0; j < output.length; ++j) {
-                            if (output[j] > maxValue) {
-                                maxValue = output[j];
-                                maxPosition = j;
-                            }
-                        }
-                        processingTimeMs = SystemClock.uptimeMillis() - processingTimeMs;
-                        String label = "Prediction Result : ";
-                        label += labels.size() > maxPosition ? labels.get(maxPosition) : "unknown";
-                        label += "\nPrediction Time : " + processingTimeMs + "ms";
-                        mResultView.setText(label);
-                    }
-                    Log.i(TAG, "prediction finished");
+              // pre-process the image rgb data transpose based on the provided parameters.
+              for (int k = 0; k < IMG_CHANNEL; ++k) {
+                for (int l = 0; l < MODEL_INPUT_SIZE; ++l) {
+                  for (int m = 0; m < MODEL_INPUT_SIZE; ++m) {
+                    int dst_index =
+                        m + MODEL_INPUT_SIZE * l + MODEL_INPUT_SIZE * MODEL_INPUT_SIZE * k;
+                    int src_index = k + IMG_CHANNEL * m + IMG_CHANNEL * MODEL_INPUT_SIZE * l;
+                    imgRgbTranValues[dst_index] = imgRgbValues[src_index];
+                  }
                 }
-                return 0;
+              }
+
+              // get the function from the module(set input data)
+              Log.i(TAG, "set input data");
+              NDArray inputNdArray =
+                  NDArray.empty(new long[] {1, IMG_CHANNEL, MODEL_INPUT_SIZE, MODEL_INPUT_SIZE},
+                      new TVMType("float32"));
+              ;
+              inputNdArray.copyFrom(imgRgbTranValues);
+              Function setInputFunc = graphExecutorModule.getFunction("set_input");
+              setInputFunc.pushArg(INPUT_NAME).pushArg(inputNdArray).invoke();
+              // release tvm local variables
+              inputNdArray.release();
+              setInputFunc.release();
+
+              // get the function from the module(run it)
+              Log.i(TAG, "run function on target");
+              Function runFunc = graphExecutorModule.getFunction("run");
+              runFunc.invoke();
+              // release tvm local variables
+              runFunc.release();
+
+              // get the function from the module(get output data)
+              Log.i(TAG, "get output data");
+              NDArray outputNdArray = NDArray.empty(new long[] {1, 1000}, new TVMType("float32"));
+              Function getOutputFunc = graphExecutorModule.getFunction("get_output");
+              getOutputFunc.pushArg(OUTPUT_INDEX).pushArg(outputNdArray).invoke();
+              float[] output = outputNdArray.asFloatArray();
+              // release tvm local variables
+              outputNdArray.release();
+              getOutputFunc.release();
+
+              // display the result from extracted output data
+              if (null != output) {
+                int maxPosition = -1;
+                float maxValue = 0;
+                for (int j = 0; j < output.length; ++j) {
+                  if (output[j] > maxValue) {
+                    maxValue = output[j];
+                    maxPosition = j;
+                  }
+                }
+                processingTimeMs = SystemClock.uptimeMillis() - processingTimeMs;
+                String label = "Prediction Result : ";
+                label += labels.size() > maxPosition ? labels.get(maxPosition) : "unknown";
+                label += "\nPrediction Time : " + processingTimeMs + "ms";
+                mResultView.setText(label);
+              }
+              Log.i(TAG, "prediction finished");
             }
+            return 0;
+          }
             return -1;
         }
 
@@ -352,7 +359,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         // release tvm local variables
         if (null != graphExecutorModule)
-            graphExecutorModule.release();
+          graphExecutorModule.release();
         super.onDestroy();
     }
 

@@ -273,7 +273,7 @@ public class Camera2BasicFragment extends Fragment {
     public void onDestroy() {
         // release tvm local variables
         if (null != graphExecutorModule)
-            graphExecutorModule.release();
+          graphExecutorModule.release();
         super.onDestroy();
     }
 
