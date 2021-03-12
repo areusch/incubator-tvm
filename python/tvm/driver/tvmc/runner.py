@@ -296,7 +296,7 @@ def run_module(
     repeat=1,
     profile=False,
 ):
-    """Run a compiled graph runtime module locally or remotely with
+    """Run a compiled graph executor module locally or remotely with
     optional input values.
 
     If input tensors are not specified explicitly, they can be filled

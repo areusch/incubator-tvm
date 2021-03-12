@@ -23,7 +23,7 @@ from ...runtime import ndarray
 
 class GraphExecutorFactoryModule:
     """Graph runtime factory module.
-    This is a module of graph runtime factory
+    This is a module of graph executor factory
 
     Parameters
     ----------
@@ -77,7 +77,7 @@ class GraphExecutorFactoryModule:
 
     def __iter__(self):
         warnings.warn(
-            "legacy graph runtime behavior of producing json / lib / params will be "
+            "legacy graph executor behavior of producing json / lib / params will be "
             "removed in the next release."
             " Please see documents of tvm.contrib.graph_executor.GraphModule for the "
             " new recommended usage.",

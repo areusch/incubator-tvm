@@ -986,9 +986,9 @@ export class Instance implements Disposable {
   }
 
   /**
-   * Create a new graph runtime.
+   * Create a new graph executor.
    *
-   * @param graphJson The graph runtime json file.
+   * @param graphJson The graph executor json file.
    * @param lib The underlying library.
    * @param ctx The execution context of the graph.
    */

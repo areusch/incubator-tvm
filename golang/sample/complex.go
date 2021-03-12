@@ -105,7 +105,7 @@ func main() {
     }
     fmt.Printf("Input and Output Arrays allocated\n")
 
-    // Get module function from graph runtime : load_params
+    // Get module function from graph executor : load_params
     // Read params
     bytes, err = ioutil.ReadFile(modParams)
     if err != nil {

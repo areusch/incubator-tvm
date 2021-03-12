@@ -106,7 +106,7 @@ Module GraphExecutorFactory::RuntimeCreate(const std::vector<TVMContext>& ctxs) 
 Module GraphExecutorFactory::DebugRuntimeCreate(const std::vector<TVMContext>& ctxs) {
   const PackedFunc* pf = tvm::runtime::Registry::Get("tvm.graph_executor_debug.create");
   ICHECK(pf != nullptr) << "Cannot find function tvm.graph_executor_debug.create in registry. "
-                           "Do you enable debug graph runtime build?";
+                           "Do you enable debug graph executor build?";
   // Debug runtime create packed function will call GetAllContexs, so we unpack the ctxs.
   std::vector<int> unpacked_ctxs;
   for (const auto& ctx : ctxs) {
@@ -125,7 +125,7 @@ Module GraphExecutorFactory::DebugRuntimeCreate(const std::vector<TVMContext>& c
   TVMRetValue rv;
   pf->CallPacked(TVMArgs(values.data(), codes.data(), args_size), &rv);
   Module mod = rv.operator Module();
-  // debug graph runtime is one child class of graph runtime.
+  // debug graph executor is one child class of graph executor.
   SetParams(const_cast<GraphExecutor*>(mod.as<GraphExecutor>()), this->params_);
   return mod;
 }

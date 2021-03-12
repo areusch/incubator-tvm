@@ -19,7 +19,7 @@
 
 /*!
  * \file tvm/runtime/graph_executor_factory.h
- * \brief Graph runtime factory creating graph runtime.
+ * \brief Graph runtime factory creating graph executor.
  */
 
 #ifndef TVM_RUNTIME_GRAPH_GRAPH_RUNTIME_FACTORY_H_
@@ -91,7 +91,7 @@ class TVM_DLL GraphExecutorFactory : public runtime::ModuleNode {
 
   /*!
    * \brief Set params.
-   * \param graph_executor The graph runtime we want to set the params into.
+   * \param graph_executor The graph executor we want to set the params into.
    * \param params The graph params value we want to set.
    */
   void SetParams(GraphExecutor* graph_executor,

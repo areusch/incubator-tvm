@@ -319,7 +319,7 @@ def tune_and_evaluate():
     remote.upload(tmp.relpath(filename))
     rlib = remote.load_module(filename)
 
-    # Create graph runtime
+    # Create graph executor
     ctx = remote.cpu()
     module = graph_executor.GraphModule(rlib["default"](ctx))
     data_tvm = tvm.nd.array((np.random.uniform(size=input_shape)).astype(dtype))
