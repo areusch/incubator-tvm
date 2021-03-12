@@ -576,7 +576,7 @@ export class Module implements Disposable {
  *  you can also directly call set_input, run, and get_output
  *  of underlying module functions
  */
-class GraphRuntime implements Disposable {
+class GraphExecutor implements Disposable {
   module: Module;
   private packedSetInput: PackedFunc;
   private packedRun: PackedFunc;
@@ -992,18 +992,18 @@ export class Instance implements Disposable {
    * @param lib The underlying library.
    * @param ctx The execution context of the graph.
    */
-  createGraphRuntime(
+  createGraphExecutor(
     graphJson: string,
     lib: Module,
     ctx: DLContext
-  ): GraphRuntime {
+  ): GraphExecutor {
     const fcreate = this.getGlobalFunc("tvm.graph_runtime.create");
     const module = fcreate(
       graphJson,
       lib,
       this.scalar(ctx.deviceType, "int32"),
       this.scalar(ctx.deviceId, "int32")) as Module;
-    return new GraphRuntime(module);
+    return new GraphExecutor(module);
   }
 
 
