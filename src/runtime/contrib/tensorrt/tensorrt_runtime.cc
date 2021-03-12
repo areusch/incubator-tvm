@@ -32,7 +32,7 @@
 #include "../json/json_node.h"
 #include "../json/json_runtime.h"
 
-#ifdef TVM_GRAPH_RUNTIME_TENSORRT
+#ifdef TVM_GRAPH_EXECUTOR_TENSORRT
 #include "NvInfer.h"
 #include "tensorrt_builder.h"
 #endif
@@ -108,7 +108,7 @@ class TensorRTRuntime : public JSONRuntimeBase {
     }
   }
 
-#ifdef TVM_GRAPH_RUNTIME_TENSORRT
+#ifdef TVM_GRAPH_EXECUTOR_TENSORRT
   /*! \brief Run inference using built engine. */
   void Run() override {
     BuildEngine();
