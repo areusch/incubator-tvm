@@ -580,7 +580,6 @@ public class Camera2BasicFragment extends Fragment {
             // tvm module for compiled functions
             Module modelLib = Module.load(libCacheFilePath);
 
-
             // get global function module for graph executor
             Log.i(TAG, "getting graph executor create handle...");
 
