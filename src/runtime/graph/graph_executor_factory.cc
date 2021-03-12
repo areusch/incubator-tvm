@@ -51,7 +51,7 @@ PackedFunc GraphExecutorFactory::GetFunction(
       for (int i = 0; i < args.num_args; ++i) {
         contexts.emplace_back(args[i].operator TVMContext());
       }
-      *rv = this->RuntimeCreate(contexts);
+      *rv = this->ExecutorCreate(contexts);
     });
   } else if (name == "debug_create") {
     return PackedFunc([sptr_to_self, this](TVMArgs args, TVMRetValue* rv) {
@@ -62,7 +62,7 @@ PackedFunc GraphExecutorFactory::GetFunction(
       for (int i = 1; i < args.num_args; ++i) {
         contexts.emplace_back(args[i].operator TVMContext());
       }
-      *rv = this->DebugRuntimeCreate(contexts);
+      *rv = this->DebugExecutorCreate(contexts);
     });
   } else if (name == "remove_params") {
     return PackedFunc([sptr_to_self, this](TVMArgs args, TVMRetValue* rv) {
@@ -95,7 +95,7 @@ void GraphExecutorFactory::SaveToBinary(dmlc::Stream* stream) {
   stream->Write(module_name_);
 }
 
-Module GraphExecutorFactory::RuntimeCreate(const std::vector<TVMContext>& ctxs) {
+Module GraphExecutorFactory::ExecutorCreate(const std::vector<TVMContext>& ctxs) {
   auto exec = make_object<GraphExecutor>();
   exec->Init(this->graph_json_, this->imports_[0], ctxs, PackedFunc());
   // set params
@@ -103,11 +103,11 @@ Module GraphExecutorFactory::RuntimeCreate(const std::vector<TVMContext>& ctxs) 
   return Module(exec);
 }
 
-Module GraphExecutorFactory::DebugRuntimeCreate(const std::vector<TVMContext>& ctxs) {
+Module GraphExecutorFactory::DebugExecutorCreate(const std::vector<TVMContext>& ctxs) {
   const PackedFunc* pf = tvm::runtime::Registry::Get("tvm.graph_executor_debug.create");
   ICHECK(pf != nullptr) << "Cannot find function tvm.graph_executor_debug.create in registry. "
                            "Do you enable debug graph executor build?";
-  // Debug runtime create packed function will call GetAllContexs, so we unpack the ctxs.
+  // Debug executor create packed function will call GetAllContexs, so we unpack the ctxs.
   std::vector<int> unpacked_ctxs;
   for (const auto& ctx : ctxs) {
     unpacked_ctxs.emplace_back(ctx.device_type);

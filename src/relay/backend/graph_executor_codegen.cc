@@ -19,7 +19,7 @@
 
 /*!
  * \file relay/backend/graph_codegen.cc
- * \brief Graph runtime codegen
+ * \brief Graph executor codegen
  */
 
 #include <dmlc/any.h>
